@@ -46,7 +46,8 @@ model User {
   password                 String
   role                     UserRole      @default(CUSTOMER)
   isEmailVerified          Boolean       @default(false)
-
+  emailVerificationToken   String?
+  emailVerificationExpiry  DateTime?
   createdAt                DateTime      @default(now())
   updatedAt                DateTime      @updatedAt
 
