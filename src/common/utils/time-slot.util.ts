@@ -11,6 +11,7 @@
  *  - An appointment cannot start during break or cause overlap into break
  */
 
+import { log } from "console";
 import { TIME_SLOT } from "../constants/time.util";
 
 export interface TimeRange {
@@ -99,9 +100,11 @@ export class TimeSlotUtil {
       current + durationMinutes <= workEnd;
       current += this.SLOT_INTERVAL_MINUTES
     ) {
+      console.log(current,"cur");
+      
       const startTime = this.fromMinutes(current);
       const endTime = this.fromMinutes(current + durationMinutes);
-
+console.log(startTime,endTime,"st");
       // Skip if overlaps break
       if (this.overlapsBreak(startTime, endTime)) continue;
 
@@ -110,6 +113,7 @@ export class TimeSlotUtil {
         this.rangesOverlap({ startTime, endTime }, booked),
       );
       if (hasConflict) continue;
+console.log(startTime,"startTime");
 
       available.push(startTime);
     }

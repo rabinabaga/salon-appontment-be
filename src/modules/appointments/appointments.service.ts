@@ -13,6 +13,7 @@ import { GetAvailableSlotsDto } from './dtos/appointment.dto';
 import { ServicesService } from '../services/services.service';
 import { TimeSlotUtil } from '../../common/utils/time-slot.util';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AppointmentsGateway } from './appointment.gateway';
 
 @Injectable()
 export class AppointmentsService {
@@ -20,45 +21,52 @@ export class AppointmentsService {
     private readonly prisma: PrismaService,
     @InjectQueue('appointment-notifications')
     private readonly notificationQueue: Queue,
+    private readonly gateway: AppointmentsGateway,
+
     private readonly servicesService: ServicesService,
   ) {}
 
-  /** Fetch all booked ranges for a date (excludes CANCELLED) */
-  private async getBookedRangesForDate(date: Date, excludeId?: string) {
-    const appointments = await this.prisma.appointment.findMany({
-      where: {
-        date,
-        status: { not: AppointmentStatus.CANCELLED },
-        ...(excludeId && { id: { not: excludeId } }),
-      },
-      select: {
-        startTime: true,
-        endTime: true,
-      },
-    });
+  /** Fetch all booked ranges for a date and service(excludes CANCELLED) */
+private async getBookedRangesForDate(date: Date, serviceId: string, excludeId?: string) {
+  const appointments = await this.prisma.appointment.findMany({
+    where: {
+      date,
+      serviceId,                                          // ← add this
+      status: { not: AppointmentStatus.CANCELLED },
+      ...(excludeId && { id: { not: excludeId } }),
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+    },
+  });
 
-    return appointments.map((a) => ({
-      startTime: a.startTime.toString().slice(0, 5), // "HH:MM:SS" -> "HH:MM"
-      endTime: a.endTime.toString().slice(0, 5),
-    }));
-  }
+  return appointments.map((a) => ({
+    startTime: a.startTime.toString().slice(0, 5),
+    endTime: a.endTime.toString().slice(0, 5),
+  }));
+}
 
   async getAvailableSlots(dto: GetAvailableSlotsDto): Promise<string[]> {
     const service = await this.servicesService.findOne(dto.serviceId);
-    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date));
+    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date), service.id);
+    console.log(bookedRanges,"bookedrange");
+    console.log(service.duration,"srdur");
+    
     return TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
   }
 
-  // /** Recompute and broadcast fresh available slots */
-  // private async broadcastSlots(serviceId: string, date: Date): Promise<void> {
-  //   try {
-  //     const service = await this.servicesService.findOne(serviceId);
-  //     const bookedRanges = await this.getBookedRangesForDate(date);
-  //     const slots = TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
-  //   } catch {
-  //     // silent fail — broadcast errors must never break HTTP response
-  //   }
-  // }
+  /** Recompute and broadcast fresh available slots */
+  private async broadcastSlots(serviceId: string, date: string): Promise<void> {
+    try {
+      const service = await this.servicesService.findOne(serviceId);
+      const bookedRanges = await this.getBookedRangesForDate(new Date(date), service.id);
+      const slots = TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
+      this.gateway.broadcastSlotsUpdate(serviceId, date, slots);
+    } catch {
+      // silent fail — broadcast errors must never break HTTP response
+    }
+  }
 
   async findOne(id: string, user: User) {
     const appointment = await this.prisma.appointment.findUnique({
@@ -101,7 +109,7 @@ export class AppointmentsService {
       throw new BadRequestException('This service is currently unavailable');
     }
 
-    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date));
+    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date), service.id);
 
     const error = TimeSlotUtil.validateSlot(
       dto.startTime,
@@ -128,7 +136,7 @@ export class AppointmentsService {
       },
     });
 
-    // await this.broadcastSlots(service.id, dto.date);
+    await this.broadcastSlots(service.id, dto.date);
 
     return saved;
   }
@@ -217,7 +225,7 @@ export class AppointmentsService {
       endTime: appointment.endTime,
     });
 
-    // await this.broadcastSlots(appointment.serviceId, appointment.date);
+    await this.broadcastSlots(appointment.serviceId, appointment.date.toISOString().slice(0, 10));
 
     return saved;
   }
@@ -239,7 +247,7 @@ export class AppointmentsService {
       include: { service: true, user: true },
     });
 
-    // await this.broadcastSlots(appointment.serviceId, appointment.date);
+    await this.broadcastSlots(appointment.serviceId, appointment.date.toISOString().slice(0, 10));
 
     return saved;
   }
