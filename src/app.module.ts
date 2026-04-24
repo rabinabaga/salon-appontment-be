@@ -7,9 +7,11 @@ import { MailModule } from './modules/mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { appConfigs } from './config/app.config';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(appConfigs), AuthModule, PrismaModule, MailModule],
+  imports: [ServicesModule,ConfigModule.forRoot(appConfigs), AuthModule, PrismaModule, MailModule, AppointmentsModule],
   controllers: [AppController],
   providers: [AppService],
 })
