@@ -1,0 +1,6 @@
+export const TIME_SLOT = { WORK_START :'09:00',
+   WORK_END :'20:00',
+   BREAK_START :'12:00',
+   BREAK_END :'14:00',
+   SLOT_INTERVAL_MINUTES :15,
+}
