@@ -45,27 +45,44 @@ export class AuthService {
     return { message: AUTH_MESSAGES.REGISTRATION_SUCCESS };
   }
 
-  async verifyEmail(token: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { emailVerificationToken: token },
-    });
+async verifyEmail(token: string) {
+  console.log(token);
+  
+  const user = await this.prisma.user.findFirst({
+    where: { emailVerificationToken: token },
+  });
+  console.log(user);
+  
 
-    if (!user) throw new BadRequestException(AUTH_MESSAGES.INVALID_VERIFICATION_TOKEN);
-    if (!user.emailVerificationExpiry || new Date() > user.emailVerificationExpiry) {
-      throw new BadRequestException(AUTH_MESSAGES.VERIFICATION_TOKEN_EXPIRED);
-    }
+  if (!user) {
+    throw new BadRequestException(AUTH_MESSAGES.INVALID_VERIFICATION_TOKEN);
+  }
+  
 
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        isEmailVerified: true,
-        emailVerificationToken: null,
-        emailVerificationExpiry: null,
-      },
-    });
+  if (!user.emailVerificationExpiry) {
+    throw new BadRequestException(AUTH_MESSAGES.INVALID_VERIFICATION_TOKEN);
+  }
 
+  if (new Date() > new Date(user.emailVerificationExpiry)) {
+    throw new BadRequestException(AUTH_MESSAGES.VERIFICATION_TOKEN_EXPIRED);
+  }
+
+  // already verified guard (optional but important)
+  if (user.isEmailVerified) {
     return { message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESS };
   }
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isEmailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationExpiry: null,
+    },
+  });
+
+  return { message: AUTH_MESSAGES.EMAIL_VERIFIED_SUCCESS };
+}
 
   async resendVerification(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });

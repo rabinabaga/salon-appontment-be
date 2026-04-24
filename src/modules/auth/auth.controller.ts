@@ -16,11 +16,11 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @Get('verify-email')
-  @ApiOperation({ summary: 'Verify email via token from email link' })
-  verifyEmail(@Query() dto: VerifyEmailDto) {
-    return this.authService.verifyEmail(dto.token);
-  }
+    @Get('verify-email')
+    @ApiOperation({ summary: 'Verify email via token from email link' })
+    verifyEmail(@Query() dto: VerifyEmailDto) {
+      return this.authService.verifyEmail(dto.token);
+    }
 
   @Post('resend-verification')
   @Throttle({ default: { limit: 3, ttl: 60000 } })

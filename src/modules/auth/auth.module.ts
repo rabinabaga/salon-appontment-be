@@ -14,8 +14,8 @@ import { MailModule } from '../mail/mail.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN', '1d') },
+        secret: config.get<string>('jwt.access_token_secret'),
+        signOptions: { expiresIn: config.get<string>('jwt.access_expiration_time', '1d') },
       }),
       inject: [ConfigService],
     }),
