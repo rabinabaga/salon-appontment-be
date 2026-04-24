@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+    url      = env("DATABASE_URL")
+
+}
+
+
+
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum BulkJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationLogStatus {
+  SUCCESS
+  FAILED
+  INVALID
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id                       String        @id @default(uuid())
+  name                     String
+  email                    String        @unique
+  password                 String
+  role                     UserRole      @default(CUSTOMER)
+  isEmailVerified          Boolean       @default(false)
+
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  appointments             Appointment[]
+  bulkJobs                 BulkJob[]
+}
+
+model Service {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  duration     Int           // in minutes
+  price        Decimal       @db.Decimal(10, 2)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  appointments Appointment[]
+}
+
+model Appointment {
+  id          String            @id @default(uuid())
+  userId      String
+  serviceId   String
+  date        DateTime          @db.Date
+  startTime   DateTime          @db.Time()
+  endTime     DateTime          @db.Time()
+  duration    Int               // snapshotted from service at booking time
+  status      AppointmentStatus @default(PENDING)
+  confirmedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id])
+  service     Service           @relation(fields: [serviceId], references: [id])
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([date])
+}
+
+model NotificationTemplate {
+  id        String    @id @default(uuid())
+  name      String
+  subject   String
+  body      String    @db.Text  // supports placeholders like {customerName}, {service}, {date}, {time}
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  settings  Settings?
+}
+
+model Settings {
+  id                 String               @id @default(uuid())
+  activeTemplateId   String               @unique
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  activeTemplate     NotificationTemplate @relation(fields: [activeTemplateId], references: [id])
+}
+
+model BulkJob {
+  id             String        @id @default(uuid())
+  uploadedById   String
+  fileUrl        String
+  status         BulkJobStatus @default(PENDING)
+  totalRows      Int           @default(0)
+  processedCount Int           @default(0)
+  successCount   Int           @default(0)
+  failCount      Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  uploadedBy     User          @relation(fields: [uploadedById], references: [id])
+  logs           NotificationLog[]
+}
+
+model NotificationLog {
+  id            String                @id @default(uuid())
+  bulkJobId     String
+  customerEmail String
+  customerName  String
+  service       String                // stored as string since external data
+  date          String                // stored as string since external data
+  status        NotificationLogStatus
+  errorMessage  String?
+  processedAt   DateTime              @default(now())
+
+  bulkJob       BulkJob               @relation(fields: [bulkJobId], references: [id])
+
+  @@index([bulkJobId])
+}
+
