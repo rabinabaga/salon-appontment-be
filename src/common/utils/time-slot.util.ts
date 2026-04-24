@@ -11,17 +11,19 @@
  *  - An appointment cannot start during break or cause overlap into break
  */
 
+import { TIME_SLOT } from "../constants/time.util";
+
 export interface TimeRange {
   startTime: string; // "HH:MM"
   endTime: string;   // "HH:MM"
 }
 
 export class TimeSlotUtil {
-  static readonly WORK_START = '09:00';
-  static readonly WORK_END = '20:00';
-  static readonly BREAK_START = '12:00';
-  static readonly BREAK_END = '14:00';
-  static readonly SLOT_INTERVAL_MINUTES = 15;
+  static readonly WORK_START = TIME_SLOT.WORK_START;
+  static readonly WORK_END = TIME_SLOT.WORK_END;
+  static readonly BREAK_START = TIME_SLOT.BREAK_START;
+  static readonly BREAK_END = TIME_SLOT.BREAK_END;
+  static readonly SLOT_INTERVAL_MINUTES = TIME_SLOT.SLOT_INTERVAL_MINUTES;
 
   /** Convert "HH:MM" to total minutes since midnight */
   static toMinutes(time: string): number {

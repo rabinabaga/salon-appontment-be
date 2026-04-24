@@ -38,8 +38,8 @@ export class AppointmentsService {
     });
 
     return appointments.map((a) => ({
-      startTime: a.startTime,
-      endTime: a.endTime,
+      startTime: a.startTime.toString().slice(0, 5), // "HH:MM:SS" -> "HH:MM"
+      endTime: a.endTime.toString().slice(0, 5),
     }));
   }
 
@@ -49,16 +49,16 @@ export class AppointmentsService {
     return TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
   }
 
-  /** Recompute and broadcast fresh available slots */
-  private async broadcastSlots(serviceId: string, date: Date): Promise<void> {
-    try {
-      const service = await this.servicesService.findOne(serviceId);
-      const bookedRanges = await this.getBookedRangesForDate(date);
-      const slots = TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
-    } catch {
-      // silent fail — broadcast errors must never break HTTP response
-    }
-  }
+  // /** Recompute and broadcast fresh available slots */
+  // private async broadcastSlots(serviceId: string, date: Date): Promise<void> {
+  //   try {
+  //     const service = await this.servicesService.findOne(serviceId);
+  //     const bookedRanges = await this.getBookedRangesForDate(date);
+  //     const slots = TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
+  //   } catch {
+  //     // silent fail — broadcast errors must never break HTTP response
+  //   }
+  // }
 
   async findOne(id: string, user: User) {
     const appointment = await this.prisma.appointment.findUnique({
@@ -116,9 +116,9 @@ export class AppointmentsService {
       data: {
         userId: user.id,
         serviceId: service.id,
-        date: dto.date,
-        startTime: dto.startTime,
-        endTime,
+        date: new Date(dto.date),
+        startTime: new Date(`1970-01-01T${dto.startTime}:00`),
+        endTime: new Date(`1970-01-01T${endTime}:00`),
         duration: service.duration, // snapshot
         status: AppointmentStatus.PENDING,
       },
@@ -128,59 +128,59 @@ export class AppointmentsService {
       },
     });
 
-    await this.broadcastSlots(service.id, dto.date);
+    // await this.broadcastSlots(service.id, dto.date);
 
     return saved;
   }
 
-  async update(id: string, dto: UpdateAppointmentDto, user: User) {
-     if (!dto.date) return [];
-    const appointment = await this.findOne(id, user);
-    const dateObjFromDto =  new Date(dto.date);
-    if (appointment.status !== AppointmentStatus.PENDING) {
-      throw new BadRequestException('Only PENDING appointments can be updated.');
-    }
+  // async update(id: string, dto: UpdateAppointmentDto, user: User) {
+  //    if (!dto.date) return [];
+  //   const appointment = await this.findOne(id, user);
+  //   const dateObjFromDto =  new Date(dto.date);
+  //   if (appointment.status !== AppointmentStatus.PENDING) {
+  //     throw new BadRequestException('Only PENDING appointments can be updated.');
+  //   }
 
-    const oldDate = appointment.date;
-    const newDate = dateObjFromDto ?? appointment.date;
-    const newStartTime = dto.startTime ?? appointment.startTime;
+  //   const oldDate = appointment.date;
+  //   const newDate = dateObjFromDto ?? appointment.date;
+  //   const newStartTime = dto.startTime ?? appointment.startTime;
 
-    let newEndTime = appointment.endTime;
+  //   let newEndTime = appointment.endTime;
 
-    if (dto.date || dto.startTime) {
-      const bookedRanges = await this.getBookedRangesForDate(newDate, id);
+  //   if (dto.date || dto.startTime) {
+  //     const bookedRanges = await this.getBookedRangesForDate(newDate, id);
 
-      const error = TimeSlotUtil.validateSlot(
-        newStartTime,
-        appointment.duration,
-        bookedRanges,
-      );
-      if (error) throw new BadRequestException(error);
+  //     const error = TimeSlotUtil.validateSlot(
+  //       newStartTime,
+  //       appointment.duration,
+  //       bookedRanges,
+  //     );
+  //     if (error) throw new BadRequestException(error);
 
-      newEndTime = TimeSlotUtil.calcEndTime(newStartTime, appointment.duration);
-    }
+  //     newEndTime = TimeSlotUtil.calcEndTime(newStartTime, appointment.duration);
+  //   }
 
-    const saved = await this.prisma.appointment.update({
-      where: { id },
-      data: {
-        date: newDate,
-        startTime: newStartTime,
-        endTime: newEndTime,
-        ...(dto.notes !== undefined && { notes: dto.notes }),
-      },
-      include: {
-        service: true,
-        user: true,
-      },
-    });
+  //   const saved = await this.prisma.appointment.update({
+  //     where: { id },
+  //     data: {
+  //       date: newDate,
+  //       startTime: newStartTime,
+  //       endTime: newEndTime,
+  //       ...(dto.notes !== undefined && { notes: dto.notes }),
+  //     },
+  //     include: {
+  //       service: true,
+  //       user: true,
+  //     },
+  //   });
 
-    await this.broadcastSlots(appointment.serviceId, oldDate);
-    if (dateObjFromDto && dateObjFromDto !== oldDate) {
-      await this.broadcastSlots(appointment.serviceId, dateObjFromDto);
-    }
+  //   await this.broadcastSlots(appointment.serviceId, oldDate);
+  //   if (dateObjFromDto && dateObjFromDto !== oldDate) {
+  //     await this.broadcastSlots(appointment.serviceId, dateObjFromDto);
+  //   }
 
-    return saved;
-  }
+  //   return saved;
+  // }
 
   async confirm(id: string, user: User) {
     if (user.role !== UserRole.STAFF) {
@@ -217,7 +217,7 @@ export class AppointmentsService {
       endTime: appointment.endTime,
     });
 
-    await this.broadcastSlots(appointment.serviceId, appointment.date);
+    // await this.broadcastSlots(appointment.serviceId, appointment.date);
 
     return saved;
   }
@@ -239,7 +239,7 @@ export class AppointmentsService {
       include: { service: true, user: true },
     });
 
-    await this.broadcastSlots(appointment.serviceId, appointment.date);
+    // await this.broadcastSlots(appointment.serviceId, appointment.date);
 
     return saved;
   }

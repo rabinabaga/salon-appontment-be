@@ -50,15 +50,15 @@ export class AppointmentsController {
     return this.appointmentsService.findOne(id, user);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a PENDING appointment' })
-  update(
-    @Param('id') id: string,
-    @Body() dtos: UpdateAppointmentDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.appointmentsService.update(id, dtos, user);
-  }
+  // @Patch(':id')
+  // @ApiOperation({ summary: 'Update a PENDING appointment' })
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() dtos: UpdateAppointmentDto,
+  //   @CurrentUser() user: User,
+  // ) {
+  //   return this.appointmentsService.update(id, dtos, user);
+  // }
 
   @Patch(':id/confirm')
   @Roles(UserRole.STAFF)

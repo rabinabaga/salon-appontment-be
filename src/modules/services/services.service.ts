@@ -1,40 +1,38 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { SalonService } from './entities/service.entity';
-import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateServiceDto, UpdateServiceDto } from './dtos/services.dto';
 
 @Injectable()
 export class ServicesService {
-  constructor(
-    @InjectRepository(SalonService)
-    private readonly serviceRepo: Repository<SalonService>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateServiceDto): Promise<SalonService> {
-    const service = this.serviceRepo.create(dto);
-    return this.serviceRepo.save(service);
+  create(dto: CreateServiceDto) {
+    return this.prisma.service.create({ data: dto });
   }
 
-  findAll(activeOnly = false): Promise<SalonService[]> {
-    const where = activeOnly ? { isActive: true } : {};
-    return this.serviceRepo.find({ where, order: { name: 'ASC' } });
+  findAll(activeOnly = false) {
+    return this.prisma.service.findMany({
+      where: activeOnly ? { isActive: true } : {},
+      orderBy: { name: 'asc' },
+    });
   }
 
-  async findOne(id: string): Promise<SalonService> {
-    const service = await this.serviceRepo.findOne({ where: { id } });
+  async findOne(id: string) {
+    const service = await this.prisma.service.findUnique({ where: { id } });
     if (!service) throw new NotFoundException(`Service with id ${id} not found`);
     return service;
   }
 
-  async update(id: string, dto: UpdateServiceDto): Promise<SalonService> {
-    const service = await this.findOne(id);
-    Object.assign(service, dto);
-    return this.serviceRepo.save(service);
+  async update(id: string, dto: UpdateServiceDto) {
+    await this.findOne(id); // throws 404 if not found
+    return this.prisma.service.update({
+      where: { id },
+      data: dto,
+    });
   }
 
-  async remove(id: string): Promise<void> {
-    const service = await this.findOne(id);
-    await this.serviceRepo.remove(service);
+  async remove(id: string) {
+    await this.findOne(id); // throws 404 if not found
+    await this.prisma.service.delete({ where: { id } });
   }
 }
