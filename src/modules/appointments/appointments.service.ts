@@ -41,10 +41,10 @@ private async getBookedRangesForDate(date: Date, serviceId: string, excludeId?: 
     },
   });
 
-  return appointments.map((a) => ({
-    startTime: a.startTime.toString().slice(0, 5),
-    endTime: a.endTime.toString().slice(0, 5),
-  }));
+return appointments.map((a) => ({
+  startTime: `${String(a.startTime.getUTCHours()).padStart(2, '0')}:${String(a.startTime.getUTCMinutes()).padStart(2, '0')}`,
+  endTime: `${String(a.endTime.getUTCHours()).padStart(2, '0')}:${String(a.endTime.getUTCMinutes()).padStart(2, '0')}`,
+}));
 }
 
   async getAvailableSlots(dto: GetAvailableSlotsDto): Promise<string[]> {
@@ -119,14 +119,15 @@ private async getBookedRangesForDate(date: Date, serviceId: string, excludeId?: 
     if (error) throw new BadRequestException(error);
 
     const endTime = TimeSlotUtil.calcEndTime(dto.startTime, service.duration);
-
+const endTimeInUTC = new Date(`1970-01-01T${endTime}:00Z`);
+const startTimeInUTC = new Date(`1970-01-01T${dto.startTime}:00Z`);
     const saved = await this.prisma.appointment.create({
       data: {
         userId: user.id,
         serviceId: service.id,
         date: new Date(dto.date),
-        startTime: new Date(`1970-01-01T${dto.startTime}:00`),
-        endTime: new Date(`1970-01-01T${endTime}:00`),
+        startTime: startTimeInUTC,
+        endTime: endTimeInUTC,
         duration: service.duration, // snapshot
         status: AppointmentStatus.PENDING,
       },

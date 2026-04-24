@@ -98,7 +98,7 @@ export class TimeSlotUtil {
     for (
       let current = workStart;
       current + durationMinutes <= workEnd;
-      current += this.SLOT_INTERVAL_MINUTES
+      current += durationMinutes
     ) {
       console.log(current,"cur");
       
