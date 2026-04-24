@@ -1,98 +1,184 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Salon Appointment & Time Slot Management System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-grade salon booking system built with NestJS, PostgreSQL, BullMQ, and WebSockets.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Tech Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Backend:** NestJS, TypeScript, PostgreSQL, TypeORM
+- **Queue:** BullMQ + Redis
+- **Real-time:** WebSockets (Socket.io)
+- **Email:** Nodemailer
+- **Frontend:** Next.js (React), Tailwind CSS
+- **Documentation:** Swagger
+- **File Processing:** ExcelJS
 
-## Project setup
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL
+- Redis
+
+### Installation
 
 ```bash
-$ npm install
+git clone <repo-url>
+cd salon-appointment-system
+npm install
+cp .env.example .env
+# Fill in your environment variables
+npm run migration:run
+npm run seed
+npm run start:dev
 ```
 
-## Compile and run the project
+### Environment Variables
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/salon
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=your_email
+MAIL_PASS=your_password
+MAIL_FROM=noreply@salon.com
+FRONTEND_URL=http://localhost:3001
+PORT=3000
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## Architecture Overview
 
-# e2e tests
-$ npm run test:e2e
+### System Design
 
-# test coverage
-$ npm run test:cov
+```
+Client (Next.js)
+    │
+    ├── HTTP Requests → NestJS REST API
+    │                       │
+    │                       ├── PostgreSQL (persistent data)
+    │                       ├── Redis (BullMQ queues + cache)
+    │                       └── Nodemailer (email)
+    │
+    └── WebSocket → NestJS Gateway
+                        │
+                        └── Emits real-time job progress
 ```
 
-## Deployment
+### Request Flow
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Every request passes through the following NestJS layers in order:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+Middleware → Guards → Interceptors (pre) → Pipes → Controller → Interceptors (post) → Response
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- **Middleware** — JWT extraction, request logging
+- **Guards** — authentication and role-based access control (RBAC)
+- **Interceptors** — request/response transformation
+- **Pipes** — DTO validation via class-validator
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## Architectural Decisions
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 1. Services are dynamic, not hardcoded enums
+The task mentions "haircuts, manicures, spa, etc." — the "etc." signals extensibility. Services are managed via staff CRUD APIs instead of hardcoded enum values, allowing new services to be added without code changes.
 
-## Support
+### 2. One service provider per service type
+The task does not mention multiple staff members. The system assumes one slot per service at a time. This can be extended to support multiple staff per service by introducing a `staff` table with service assignments.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 3. Appointment updates only allowed on PENDING status
+Confirmed appointments cannot be updated — they must be cancelled and rebooked. This prevents slot conflicts and invalidated confirmation emails.
 
-## Stay in touch
+**Status flow:** `PENDING → CONFIRMED → CANCELLED`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 4. Service duration snapshotted at booking time
+Duration is stored directly on the appointment at the time of booking, not referenced from the service table. This prevents existing appointments from breaking if a service's duration is changed in the future.
 
-## License
+### 5. Notifications are sent via email (Nodemailer)
+The task does not specify a notification channel. Email via Nodemailer was chosen as the standard approach.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 6. Bulk Excel file contains external customer data
+The Excel upload is assumed to contain external customer appointments (customerName, customerEmail, service, date, time) that may not be registered users in the system.
+
+### 7. Single appointment confirmation email on status change
+When staff confirms a single appointment, one confirmation email is sent automatically via BullMQ. This is intentionally asynchronous to avoid blocking the HTTP response.
+
+### 8. Template selection is a settings page, not post-login redirect
+Notification template selection is accessible from the navigation menu at any time. The active template is persisted in a settings table and used for all outgoing confirmation emails.
+
+### 9. WebSockets only for bulk job processing
+WebSocket events are emitted during bulk notification job processing. Both the upload page and the logs page consume the same socket events. If the client disconnects, job results are persisted in the database and viewable in the logs page after reconnection.
+
+### 10. BullMQ concurrency set to 5
+Concurrency of 5 was chosen to balance processing speed with SMTP provider rate limits. Increasing this value risks email delivery failures from provider throttling.
+
+### 11. Only registered and email-verified users can book
+Guest booking is not supported. Authentication is required for all appointment operations.
+
+### 12. Two roles — Customer and Staff
+- **Customer** — registers, books appointments, views own appointments
+- **Staff** — manages all appointments, confirms/cancels, uploads Excel, selects notification templates, views logs
+
+### 13. Break period applies to all days
+The 12:00 PM to 2:00 PM break period applies every day. Holiday management is out of scope for the current implementation and noted as a future enhancement.
+
+---
+
+## Database Schema
+
+```
+users: id, name, email, password, role, address, isEmailVerified, createdAt
+services: id, name, duration (minutes), price, isActive, createdAt
+appointments: id, userId, serviceId, date, startTime, endTime, duration (snapshot), status, confirmedAt, createdAt
+notification_templates: id, name, subject, body, createdAt
+bulk_jobs: id, uploadedBy, fileUrl, status, totalRows, processedCount, successCount, failCount, createdAt
+notification_logs: id, bulkJobId, customerEmail, customerName, service, date, status, errorMessage, processedAt
+settings: id, activeTemplateId
+```
+
+---
+
+## API Documentation
+
+Swagger documentation available at: `http://localhost:3000/api`
+
+---
+
+## Features
+
+- User registration with email verification
+- JWT authentication with role-based access control (RBAC)
+- Dynamic service management (staff CRUD)
+- Appointment booking with real-time slot availability
+- Overlap detection and break period enforcement
+- Single appointment confirmation with automatic email
+- Bulk appointment notification via Excel upload
+- BullMQ async processing with concurrency of 5
+- Real-time WebSocket updates for bulk job progress
+- Appointment confirmation logs with per-row status
+- Notification template management with preview
+- Database migrations with TypeORM
+- Global exception handling
+- Rate limiting via NestJS Throttler
+- Security headers via Helmet
+- Input validation via class-validator
+
+---
+
+## Future Enhancements
+
+- Multiple staff per service type
+- Holiday/day-off management
+- Customer self-service cancellation
+- Appointment reminders (scheduled BullMQ jobs)
+- WebSocket updates for individual appointment status changes
+- SMS notifications
