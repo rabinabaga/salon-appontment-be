@@ -9,9 +9,17 @@ import { ConfigModule } from '@nestjs/config';
 import { appConfigs } from './config/app.config';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { ServicesModule } from './modules/services/services.module';
+import { BullModule } from '@nestjs/bullmq';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
-  imports: [ServicesModule,ConfigModule.forRoot(appConfigs), AuthModule, PrismaModule, MailModule, AppointmentsModule],
+  imports: [ServicesModule,ConfigModule.forRoot(appConfigs),BullModule.forRoot({
+  connection: {
+    host: 'localhost',
+    port: 6379,
+  },
+}), AuthModule, PrismaModule, MailModule, AppointmentsModule, NotificationsModule
+],
   controllers: [AppController],
   providers: [AppService],
 })
