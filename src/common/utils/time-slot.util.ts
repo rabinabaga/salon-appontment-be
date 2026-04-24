@@ -100,11 +100,9 @@ export class TimeSlotUtil {
       current + durationMinutes <= workEnd;
       current += durationMinutes
     ) {
-      console.log(current,"cur");
       
       const startTime = this.fromMinutes(current);
       const endTime = this.fromMinutes(current + durationMinutes);
-console.log(startTime,endTime,"st");
       // Skip if overlaps break
       if (this.overlapsBreak(startTime, endTime)) continue;
 
@@ -113,7 +111,6 @@ console.log(startTime,endTime,"st");
         this.rangesOverlap({ startTime, endTime }, booked),
       );
       if (hasConflict) continue;
-console.log(startTime,"startTime");
 
       available.push(startTime);
     }

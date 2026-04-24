@@ -46,12 +46,10 @@ export class AuthService {
   }
 
 async verifyEmail(token: string) {
-  console.log(token);
   
   const user = await this.prisma.user.findFirst({
     where: { emailVerificationToken: token },
   });
-  console.log(user);
   
 
   if (!user) {

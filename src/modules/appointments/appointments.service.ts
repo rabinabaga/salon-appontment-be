@@ -50,8 +50,6 @@ return appointments.map((a) => ({
   async getAvailableSlots(dto: GetAvailableSlotsDto): Promise<string[]> {
     const service = await this.servicesService.findOne(dto.serviceId);
     const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date), service.id);
-    console.log(bookedRanges,"bookedrange");
-    console.log(service.duration,"srdur");
     
     return TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
   }
@@ -119,8 +117,8 @@ return appointments.map((a) => ({
     if (error) throw new BadRequestException(error);
 
     const endTime = TimeSlotUtil.calcEndTime(dto.startTime, service.duration);
-const endTimeInUTC = new Date(`1970-01-01T${endTime}:00Z`);
-const startTimeInUTC = new Date(`1970-01-01T${dto.startTime}:00Z`);
+    const endTimeInUTC = new Date(`1970-01-01T${endTime}:00Z`);
+    const startTimeInUTC = new Date(`1970-01-01T${dto.startTime}:00Z`);
     const saved = await this.prisma.appointment.create({
       data: {
         userId: user.id,
