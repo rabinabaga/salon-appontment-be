@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterDto, LoginDto } from './dtos/auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MailService } from './mail/mail.service';
+import { MailService } from '../mail/mail.service';
 import { AUTH_MESSAGES } from './constants/auth.messages';
 
 @Injectable()

@@ -10,12 +10,12 @@ export class MailService {
 
   constructor(private readonly config: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: this.config.get('MAIL_HOST'),
-      port: this.config.get<number>('MAIL_PORT', 587),
+      host: this.config.get('SMTP_HOST'),
+      port: this.config.get<number>('SMTP_PORT', 587),
       secure: false,
       auth: {
-        user: this.config.get('MAIL_USER'),
-        pass: this.config.get('MAIL_PASS'),
+        user: this.config.get('SMTP_USER'),
+        pass: this.config.get('SMTP_PASS'),
       },
     });
   }
@@ -58,7 +58,7 @@ export class MailService {
         html: options.html,
       });
     } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}: ${error.message}`);
+      this.logger.error(`Failed to send email to ${options.to}: ${(error as Error).message}`);
       throw error;
     }
   }
