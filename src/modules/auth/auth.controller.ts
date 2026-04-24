@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, VerifyEmailDto } from './dto/auth.dto';
+import { LoginDto, RegisterDto, VerifyEmailDto } from './dtos/auth.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
