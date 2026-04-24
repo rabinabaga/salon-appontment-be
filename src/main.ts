@@ -12,7 +12,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
-  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
+  const frontendUrl = configService.get<string>('frontendUrl', 'http://localhost:3001');
 
   // Security
   app.use(helmet.default());

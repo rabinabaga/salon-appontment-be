@@ -10,18 +10,18 @@ export class MailService {
 
   constructor(private readonly config: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST'),
-      port: this.config.get<number>('SMTP_PORT', 587),
+      host: this.config.get('mail.host'),
+      port: this.config.get<number>('mail.port', 587),
       secure: false,
       auth: {
-        user: this.config.get('SMTP_USER'),
-        pass: this.config.get('SMTP_PASS'),
+        user: this.config.get('mail.user'),
+        pass: this.config.get('mail.password'),
       },
     });
   }
 
   async sendVerificationEmail(to: string, name: string, token: string): Promise<void> {
-    const frontendUrl = this.config.get('FRONTEND_URL', 'http://localhost:3001');
+    const frontendUrl = this.config.get('frontendUrl');
     const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
 
     await this.send({

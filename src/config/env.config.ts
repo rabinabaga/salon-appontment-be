@@ -1,6 +1,7 @@
 export default () => ({
   database_url: process.env.DATABASE_URL as string,
   port: process.env.APP_PORT ? parseInt(process.env.APP_PORT) : 8000,
+  frontendUrl: process.env.FRONTEND_URL as string,
   jwt: {
     access_token_secret: process.env.ACCESS_TOKEN_SECRET as string,
     access_expiration_time: process.env.ACCESS_EXPIRATION_TIME as string,
