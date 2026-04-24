@@ -11,8 +11,8 @@ import { CreateAppointmentDto } from './dtos/appointment.dto';
 import { UpdateAppointmentDto } from './dtos/appointment.dto';
 import { GetAvailableSlotsDto } from './dtos/appointment.dto';
 import { ServicesService } from '../services/services.service';
-import { AppointmentsGateway } from './gateway/appointments.gateway';
 import { TimeSlotUtil } from '../../common/utils/time-slot.util';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -21,11 +21,10 @@ export class AppointmentsService {
     @InjectQueue('appointment-notifications')
     private readonly notificationQueue: Queue,
     private readonly servicesService: ServicesService,
-    private readonly gateway: AppointmentsGateway,
   ) {}
 
   /** Fetch all booked ranges for a date (excludes CANCELLED) */
-  private async getBookedRangesForDate(date: string, excludeId?: string) {
+  private async getBookedRangesForDate(date: Date, excludeId?: string) {
     const appointments = await this.prisma.appointment.findMany({
       where: {
         date,
@@ -46,17 +45,16 @@ export class AppointmentsService {
 
   async getAvailableSlots(dto: GetAvailableSlotsDto): Promise<string[]> {
     const service = await this.servicesService.findOne(dto.serviceId);
-    const bookedRanges = await this.getBookedRangesForDate(dto.date);
+    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date));
     return TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
   }
 
   /** Recompute and broadcast fresh available slots */
-  private async broadcastSlots(serviceId: string, date: string): Promise<void> {
+  private async broadcastSlots(serviceId: string, date: Date): Promise<void> {
     try {
       const service = await this.servicesService.findOne(serviceId);
       const bookedRanges = await this.getBookedRangesForDate(date);
       const slots = TimeSlotUtil.getAvailableSlots(service.duration, bookedRanges);
-      this.gateway.broadcastSlotsUpdate(serviceId, date, slots);
     } catch {
       // silent fail — broadcast errors must never break HTTP response
     }
@@ -103,7 +101,7 @@ export class AppointmentsService {
       throw new BadRequestException('This service is currently unavailable');
     }
 
-    const bookedRanges = await this.getBookedRangesForDate(dto.date);
+    const bookedRanges = await this.getBookedRangesForDate(new Date(dto.date));
 
     const error = TimeSlotUtil.validateSlot(
       dto.startTime,
@@ -136,14 +134,15 @@ export class AppointmentsService {
   }
 
   async update(id: string, dto: UpdateAppointmentDto, user: User) {
+     if (!dto.date) return [];
     const appointment = await this.findOne(id, user);
-
+    const dateObjFromDto =  new Date(dto.date);
     if (appointment.status !== AppointmentStatus.PENDING) {
       throw new BadRequestException('Only PENDING appointments can be updated.');
     }
 
     const oldDate = appointment.date;
-    const newDate = dto.date ?? appointment.date;
+    const newDate = dateObjFromDto ?? appointment.date;
     const newStartTime = dto.startTime ?? appointment.startTime;
 
     let newEndTime = appointment.endTime;
@@ -176,8 +175,8 @@ export class AppointmentsService {
     });
 
     await this.broadcastSlots(appointment.serviceId, oldDate);
-    if (dto.date && dto.date !== oldDate) {
-      await this.broadcastSlots(appointment.serviceId, dto.date);
+    if (dateObjFromDto && dateObjFromDto !== oldDate) {
+      await this.broadcastSlots(appointment.serviceId, dateObjFromDto);
     }
 
     return saved;

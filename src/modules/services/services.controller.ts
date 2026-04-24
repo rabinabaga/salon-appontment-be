@@ -11,11 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service';
-import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { CreateServiceDto, UpdateServiceDto } from './dtos/services.dto';
+
 
 @ApiTags('Services')
 @ApiBearerAuth('access-token')

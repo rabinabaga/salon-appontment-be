@@ -11,12 +11,13 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto, GetAvailableSlotsDto, UpdateAppointmentDto } from './dtos/appointment.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 
-import { User, UserRole } from '../users/entities/user.entity';
+
 import { CurrentUser } from 'src/common/decorators/current.user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guard';
+import { UserRole, type User } from '@prisma/client';
 
 @ApiTags('Appointments')
 @ApiBearerAuth('access-token')
@@ -27,14 +28,14 @@ export class AppointmentsController {
 
   @Get('available-slots')
   @ApiOperation({ summary: 'Get available time slots for a service on a date' })
-  getAvailableSlots(@Query() dtos: GetAvailableSlotsdtos) {
+  getAvailableSlots(@Query() dtos: GetAvailableSlotsDto) {
     return this.appointmentsService.getAvailableSlots(dtos);
   }
 
   @Post()
   @ApiOperation({ summary: 'Book a new appointment' })
-  create(@Body() dtos: CreateAppointmentDto, @CurrentUser() user: User) {
-    return this.appointmentsService.create(dtos, user);
+  create(@Body() dto: CreateAppointmentDto, @CurrentUser() user: User) {
+    return this.appointmentsService.create(dto, user);
   }
 
   @Get()
