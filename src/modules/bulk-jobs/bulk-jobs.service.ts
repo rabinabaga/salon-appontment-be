@@ -26,7 +26,7 @@ export class BulkJobsService {
 
     const savedJob = await this.prisma.bulkJob.create({
       data: {
-        uploadedBy: user.id,
+        uploadedById: user.id,
         fileUrl: file.path,
         totalRows: rows.length,
         status: 'PENDING', // or use enum if defined in Prisma
@@ -44,7 +44,7 @@ export class BulkJobsService {
 
   async findAll(user: any) {
     return this.prisma.bulkJob.findMany({
-      where: { uploadedBy: user.id },
+      where: { uploadedById: user.id },
       orderBy: { createdAt: 'desc' },
     });
   }

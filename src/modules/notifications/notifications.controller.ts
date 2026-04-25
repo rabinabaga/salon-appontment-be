@@ -14,7 +14,6 @@ export class NotificationsController {
   @Get()
   @ApiOperation({ summary: 'List all notification templates' })
   findAll() {
-    console.log('here');
     
     return this.notificationsService.findAll();
   }
