@@ -131,6 +131,7 @@ model NotificationLog {
   customerName  String
   service       String                // stored as string since external data
   date          String                // stored as string since external data
+  startTime     String
   status        NotificationLogStatus
   errorMessage  String?
   processedAt   DateTime              @default(now())

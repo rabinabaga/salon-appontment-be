@@ -12,6 +12,7 @@ import { ServicesModule } from './modules/services/services.module';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { BulkJobsModule } from './modules/bulk-jobs/bulk-jobs.module';
 
 @Module({
   imports: [ServicesModule,ConfigModule.forRoot(appConfigs),BullModule.forRoot({
@@ -19,7 +20,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     host: 'localhost',
     port: 6379,
   },
-}), AuthModule, PrismaModule, MailModule, AppointmentsModule, NotificationsModule, SettingsModule
+}), AuthModule, PrismaModule, MailModule, AppointmentsModule, NotificationsModule, SettingsModule, BulkJobsModule
 ],
   controllers: [AppController],
   providers: [AppService],
