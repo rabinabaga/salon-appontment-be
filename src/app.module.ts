@@ -11,6 +11,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { ServicesModule } from './modules/services/services.module';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [ServicesModule,ConfigModule.forRoot(appConfigs),BullModule.forRoot({
@@ -18,7 +19,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     host: 'localhost',
     port: 6379,
   },
-}), AuthModule, PrismaModule, MailModule, AppointmentsModule, NotificationsModule
+}), AuthModule, PrismaModule, MailModule, AppointmentsModule, NotificationsModule, SettingsModule
 ],
   controllers: [AppController],
   providers: [AppService],
