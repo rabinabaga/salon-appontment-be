@@ -13,6 +13,7 @@ import { MailModule } from '../mail/mail.module';
 import { SettingsModule } from '../settings/settings.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { BulkNotificationProcessor } from './bulk-notification.processor';
+import { BulkNotificationGateway } from './bulk -notification.gateway';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { BulkNotificationProcessor } from './bulk-notification.processor';
   providers: [
     BulkJobsService,
     BulkNotificationProcessor,
+    BulkNotificationGateway
   ],
   controllers: [BulkJobsController],
 })

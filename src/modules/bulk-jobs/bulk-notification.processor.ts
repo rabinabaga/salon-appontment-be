@@ -9,6 +9,7 @@ import { ExcelRow } from './bulk-jobs.service';
 import { BulkJobStatus, NotificationLogStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TemplateRenderer } from 'src/common/utils/template.renderer.util';
+import { BulkNotificationGateway } from './bulk -notification.gateway';
 
 interface BulkJobPayload {
   jobId: string;
@@ -20,6 +21,8 @@ export class BulkNotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(BulkNotificationProcessor.name);
 
   constructor(
+    private readonly gateway: BulkNotificationGateway,
+
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly settingsService: SettingsService,
@@ -35,6 +38,7 @@ export class BulkNotificationProcessor extends WorkerHost {
       where: { id: jobId },
       data: { status: BulkJobStatus.PROCESSING },
     });
+      this.gateway.emitJobStarted(jobId, rows.length);
 
 
     const settings = await this.settingsService.get();
@@ -79,8 +83,17 @@ export class BulkNotificationProcessor extends WorkerHost {
           failCount,
         },
       });
-
-      // ✅ Emit progress
+  // Emit real-time progress via WebSocket
+      this.gateway.emitRowProcessed(jobId, {
+        rowIndex: i,
+        total: rows.length,
+        processedCount,
+        successCount,
+        failCount,
+        customerEmail: row.customerEmail,
+        status: result.success ? 'SUCCESS' : 'FAILED',
+        error: result.error,
+      });
      
     }
 
@@ -89,6 +102,7 @@ export class BulkNotificationProcessor extends WorkerHost {
       where: { id: jobId },
       data: { status: BulkJobStatus.COMPLETED },
     });
+    this.gateway.emitJobCompleted(jobId, { successCount, failCount, total: rows.length });
 
   
 
