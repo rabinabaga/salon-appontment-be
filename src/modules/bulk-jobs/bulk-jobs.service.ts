@@ -29,7 +29,7 @@ export class BulkJobsService {
         uploadedById: user.id,
         fileUrl: file.path,
         totalRows: rows.length,
-        status: 'PENDING', // or use enum if defined in Prisma
+        status: 'PENDING', 
       },
     });
 
@@ -38,7 +38,7 @@ export class BulkJobsService {
       { jobId: savedJob.id, rows },
       { attempts: 1 },
     );
-
+   
     return savedJob;
   }
 
@@ -64,7 +64,7 @@ export class BulkJobsService {
 
   async getLogs(jobId: string) {
     return this.prisma.notificationLog.findMany({
-      where: {bulkJobId: jobId }, // ⚠️ field name changes from bulkJobId → jobId
+      where: {bulkJobId: jobId }, 
       orderBy: { processedAt: 'asc' },
     });
   }
